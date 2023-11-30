@@ -3,7 +3,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-import hashlib  # Import hashlib for password hashing
+import hashlib
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
@@ -36,13 +36,13 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        # Simulate a vulnerability by using an unsafe password storage method
-        # Replace this with a secure password hashing mechanism in a production scenario
-        hashed_password = hashlib.md5(password.encode()).hexdigest()
+        # Simulate a high-severity vulnerability: SQL Injection
+        # This is a security vulnerability; DO NOT use this in production code
+        query = f"SELECT * FROM User WHERE username = '{username}' AND password = '{password}'"
+        user = db.session.execute(query).fetchone()
 
-        user = User.query.filter_by(username=username, password=hashed_password).first()
         if user:
-            login_user(user)
+            login_user(User(id=user.id, username=user.username))
             flash('Login successful!', 'success')
             return redirect(url_for('home'))
         else:
