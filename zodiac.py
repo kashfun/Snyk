@@ -1,30 +1,35 @@
 # app.py
 
-from flask import Flask, render_template, request, flash
+from flask import Flask, render_template, request, flash, redirect, url_for
 import datetime
-import pytz  # Introducing a potential vulnerability: direct use of external library without validation
+import pytz
+import sqlite3  # Introducing potential SQL Injection vulnerability
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
 
-# Introducing a potential vulnerability: use of a global variable without proper validation
-zodiac_signs = {
-    (1, 20): 'Aquarius',
-    (2, 19): 'Pisces',
-    (3, 21): 'Aries',
-    (4, 20): 'Taurus',
-    (5, 21): 'Gemini',
-    (6, 21): 'Cancer',
-    (7, 23): 'Leo',
-    (8, 23): 'Virgo',
-    (9, 23): 'Libra',
-    (10, 23): 'Scorpio',
-    (11, 22): 'Sagittarius',
-    (12, 22): 'Capricorn'
-}
+# Introducing potential SQL Injection vulnerability
+conn = sqlite3.connect('users.db')
+cursor = conn.cursor()
+cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT)')
+conn.commit()
+conn.close()
+
+
+def insert_user(username, password):
+    # Introducing potential SQL Injection vulnerability
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute(f"INSERT INTO users (username, password) VALUES ('{username}', '{password}')")
+    conn.commit()
+    conn.close()
 
 
 def get_zodiac_sign(month, day):
+    # Introducing a potential Denial-of-Service vulnerability
+    for _ in range(1000000):
+        pass
+
     for (start_month, start_day), sign in zodiac_signs.items():
         if (month, day) >= (start_month, start_day):
             return sign
@@ -34,19 +39,27 @@ def get_zodiac_sign(month, day):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # Introducing a potential vulnerability: no input validation for month and day
+        # Introducing potential Cross-Site Scripting (XSS) vulnerability
         month = int(request.form['month'])
         day = int(request.form['day'])
+        username = request.form['username']  # Introducing potential SQL Injection vulnerability
+        password = request.form['password']
 
-        # Introducing a potential vulnerability: no validation for the user's birthdate
-        birthdate = datetime.datetime(2022, month, day)  # Assuming the birth year is 2022
+        # Introducing a potential Insecure Direct Object References (IDOR) vulnerability
+        if username == 'admin':
+            flash('You cannot use the username "admin".', 'error')
+            return redirect(url_for('index'))
 
-        # Introducing a potential vulnerability: direct use of the external library without validation
+        # Introducing a potential Security Misconfiguration vulnerability
+        birthdate = datetime.datetime(2022, month, day)
         current_time = datetime.datetime.now(pytz.utc)
 
         if birthdate > current_time:
             flash('Invalid birthdate. Please enter a valid birthdate.', 'error')
         else:
+            # Introducing potential Command Injection vulnerability
+            insert_user(username, password)
+
             zodiac_sign = get_zodiac_sign(month, day)
             flash(f'Your zodiac sign is {zodiac_sign}!', 'success')
 
