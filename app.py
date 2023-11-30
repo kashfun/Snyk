@@ -41,7 +41,11 @@ def login():
         query = f"SELECT * FROM User WHERE username = '{username}' AND password = '{password}'"
         user = db.session.execute(query).fetchone()
 
-        if user:
+        # Simulate a medium-severity vulnerability: Use of insecure MD5 hash for password storage
+        # This is a security vulnerability; DO NOT use this in production code
+        hashed_password = hashlib.md5(password.encode()).hexdigest()
+
+        if user and hashed_password == user.password:
             login_user(User(id=user.id, username=user.username))
             flash('Login successful!', 'success')
             return redirect(url_for('home'))
