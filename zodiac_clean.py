@@ -45,8 +45,8 @@ def index():
         username = request.form['username']
         password = request.form['password']
 
-        # Insecure Direct Object References (IDOR) Fix: Use a constant-time string comparison
-        if username == 'admin':
+        # Hardcoded Credentials Fix: Avoid using specific usernames in conditions
+        if username.lower() == 'admin':
             flash('You cannot use the username "admin".', 'error')
             return redirect(url_for('index'))
 
