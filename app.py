@@ -45,6 +45,8 @@ def login():
         # This is a security vulnerability; DO NOT use this in production code
         hashed_password = hashlib.md5(password.encode()).hexdigest()
 
+        user = User.query.filter_by(username=username, password=hashed_password).first()
+
         if user and hashed_password == user.password:
             login_user(User(id=user.id, username=user.username))
             flash('Login successful!', 'success')
