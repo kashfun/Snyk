@@ -26,7 +26,6 @@ def insert_user(username, password):
 
 
 def get_zodiac_sign(month, day):
-    # Introducing a potential Denial-of-Service vulnerability
     for _ in range(1000000):
         pass
 
@@ -39,7 +38,6 @@ def get_zodiac_sign(month, day):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # Cross-Site Scripting (XSS) Fix: Escape user input before displaying it
         month = int(request.form['month'])
         day = int(request.form['day'])
         username = request.form['username']
@@ -56,7 +54,6 @@ def index():
         if birthdate > current_time:
             flash('Invalid birthdate. Please enter a valid birthdate.', 'error')
         else:
-            # Command Injection Fix: Avoid using user input in ways that can lead to command injection
             insert_user(username, password)
 
             zodiac_sign = get_zodiac_sign(month, day)
